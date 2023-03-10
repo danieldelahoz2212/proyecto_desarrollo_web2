@@ -1,91 +1,103 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+"use client";
+import { useState } from 'react';
+import { Grid, TextField, Typography, Button } from '@mui/material'
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
-const inter = Inter({ subsets: ['latin'] })
+const validarUsuario = async (email, password) => {
+  const { data } = await axios.get(`http://localhost:3000/api/session/${email}/${password}`).catch(console.log);
+  return data
+}
 
 export default function Home() {
+  const router = useRouter()
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+
+  const handelIniciar = async () => {
+    if (form.email.trim().length === 0) {
+      setError("Debe ingresar el correo electronico.");
+      return;
+    } else if (form.password.trim().length === 0) {
+      setError("Debe ingresar la contraeña");
+      return;
+    } else if (form.password.length < 8) {
+      setError("La contraseña debe ser minimo de 6 caracteres");
+      return;
+    } else {
+      const data = await validarUsuario(form.email, form.password);
+      console.log(data);
+      if (data.estado) {
+        setError("");
+        localStorage.setItem("token", data.token);
+        router.push('/home')
+      } else {
+        setError("Datos de usuario invalidos")
+      }
+    }
+  }
+
+  const handleInput = (event) => {
+    setForm({
+      ...form,
+      [event.target.name]: event.target.value,
+    });
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <Grid component="main" container direction="row" height="100%" justifyContent="center">
+      <Grid item container direction="column" xs={8} mt={8}>
+        {
+          error.length > 0 && (
+            <Grid item xs={1} display="flex" mb={3} sx={{
+              border: "#000",
+              borderRadius: 5,
+              backgroundColor: "#8c0000",
+            }}>
+              <Typography
+                textAlign="center"
+                alignSelf="center"
+                sx={{ fontSize: 30, fontWeight: 700, color: 'white', width: '100%' }}>{error}</Typography>
+            </Grid>
+          )
+        }
+        <Grid item container direction="row" xs={7} display="flex" sx={{
+          border: " #000",
+          borderRadius: 5,
+          height: 400,
+          boxShadow: "5px 5px 40px",
+        }}>
+          <Grid item xs={12} mt={2}>
+            <Typography textAlign="center" sx={{ fontSize: 50, fontWeight: 700 }}>Login</Typography>
+          </Grid>
+          <Grid item xs={12} justifyContent="center" display="flex">
+            <TextField
+              label="Correo"
+              variant="outlined"
+              type="email"
+              name="email"
+              onChange={handleInput}
+              value={form.email}
+              sx={{ width: '90%' }} />
+          </Grid>
+          <Grid item xs={12} justifyContent="center" display="flex">
+            <TextField
+              label="Contraseña"
+              variant="outlined"
+              type="password"
+              name="password"
+              onChange={handleInput}
+              value={form.password}
+              sx={{ width: '90%' }} />
+          </Grid>
+          <Grid item xs={12} justifyContent="center" display="flex" height={30}>
+            <Button variant='contained' sx={{ width: '90%' }} onClick={handelIniciar}>Iniciar</Button>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
   )
 }
