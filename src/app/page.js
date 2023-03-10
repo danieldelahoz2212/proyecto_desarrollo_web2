@@ -24,7 +24,7 @@ export default function Home() {
     } else if (form.password.trim().length === 0) {
       setError("Debe ingresar la contraeña");
       return;
-    } else if (form.password.length < 8) {
+    } else if (form.password.length < 6) {
       setError("La contraseña debe ser minimo de 6 caracteres");
       return;
     } else {
